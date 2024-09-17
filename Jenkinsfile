@@ -30,6 +30,7 @@ pipeline {
                     // Jenkins parameters are available to PowerShell as an environment variable.
                     powershell '''
                     Write-Host "NuGet Repository URL: ${env:NUGET_SOURCE}"
+                    Write-Host "Main Branch: ${env:MAIN_BRANCH}"
                     Write-Host "Solution File: ${env:SOLUTION_FILE}"
                     Write-Host "Configuration: ${env:CONFIGURATION}"
                     Write-Host "Target Runtime: ${env:TARGET_RUNTIME}"
@@ -39,17 +40,19 @@ pipeline {
             }
         }
 
-        /*stage("Checkout the main branch") {
+        stage("Checkout the main branch") {
             steps {
                 script {
-                    echo "Building ${params.MAIN_BRANCH} branch..."*/
-                    
-                    /*])
-                }
+                    echo "Building ${params.MAIN_BRANCH} branch..."
 
-                powershell "ls" // Ensures that Jenkins pulled all the files.
+                    checkout([$class: "GitSCM", branches: [[name: "*/${env.MAIN_BRANCH}"]],
+                              userRemoteConfigs: [[url: "${env:NUGET_SOURCE}"]]
+                    ])
+
+                    powershell "ls" // Ensures that Jenkins pulled all the files.
+                }
             }
-        }*/
+        }
 
         /*stage("Deployment package creation") {
             steps {
