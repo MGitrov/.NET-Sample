@@ -43,13 +43,22 @@ pipeline {
         stage("Checkout the main branch") {
             steps {
                 script {
-                    echo "Building ${params.MAIN_BRANCH} branch..."
+                    echo "Building ${env.MAIN_BRANCH} branch..."
 
                     checkout([$class: "GitSCM", branches: [[name: "*/${env.MAIN_BRANCH}"]],
                               userRemoteConfigs: [[url: "${env:NUGET_SOURCE}"]]
                     ])
 
                     powershell "ls" // Ensures that Jenkins pulled all the files.
+                }
+            }
+        }
+
+        stage("Restore dependencies") {
+            steps {
+                script {
+                    // Pulls packages from the "NuGet.Config" file sources.
+                    powershell "dotnet restore ${env:SOLUTION_FILE}" // --source ${env:NUGET_SOURCE}
                 }
             }
         }
