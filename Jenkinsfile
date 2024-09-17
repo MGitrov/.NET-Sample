@@ -74,6 +74,16 @@ pipeline {
             }
         }
 
+        stage("Prepare for deployment (a.k.a publish)") {
+            steps {
+                echo "Publishing ${env.SOLUTION_FILE}..."
+
+                // Compiles the application and prepare it for deployment.
+                powershell "dotnet publish ${env:SOLUTION_FILE} -c ${env:CONFIGURATION} -r ${env:TARGET_RUNTIME} 
+                -o ${env:OUTPUT_DIRECTORY} --self-contained true"
+            }
+        }
+
         /*stage("Deployment package creation") {
             steps {
                     script {
