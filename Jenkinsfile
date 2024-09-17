@@ -57,9 +57,20 @@ pipeline {
         stage("Restore dependencies") {
             steps {
                 script {
+                    echo "Restoring dependencies for ${env.SOLUTION_FILE}..."
+
                     // Pulls packages from the "NuGet.Config" file sources.
                     powershell "dotnet restore ${env:SOLUTION_FILE}" // --source ${env:NUGET_SOURCE}
                 }
+            }
+        }
+
+        stage("Build solution file") {
+            steps {
+                echo "Building ${env.SOLUTION_FILE}..."
+
+                // Builds all the projects contained in the provided solution file.
+                powershell "dotnet build ${env:SOLUTION_FILE}"
             }
         }
 
