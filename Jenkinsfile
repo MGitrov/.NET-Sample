@@ -43,8 +43,7 @@ pipeline {
             steps {
                 script {
                     echo "Building ${params.MAIN_BRANCH} branch..."*/
-                    #checkout([$class: "GitSCM", branches: [[name: "*/${params.MAIN_BRANCH}"]],
-                              userRemoteConfigs: [[url: "${params.REPOSITORY_URL}"]]
+                    
                     /*])
                 }
 
