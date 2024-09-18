@@ -35,6 +35,8 @@ pipeline {
                     Write-Host "Configuration: ${env:CONFIGURATION}"
                     Write-Host "Target Runtime: ${env:TARGET_RUNTIME}"
                     Write-Host "Output Directory: ${env:OUTPUT_DIRECTORY}"
+                    Write-Host "Deploy Path: ${env:DEPLOY_PATH}"
+                    Write-Host "Web App Pool: ${env:WEB_APP_POOL}"
                     '''
                 }
             }
@@ -80,6 +82,14 @@ pipeline {
 
                 // Compiles the application and prepare it for deployment.
                 powershell "dotnet publish ${env:SOLUTION_FILE} -c ${env:CONFIGURATION} -r ${env:TARGET_RUNTIME} -o ${env:OUTPUT_DIRECTORY} --self-contained true"
+            }
+        }
+
+        stage("Deployment to IIS web server") {
+            steps {
+                powershell "Copy-Item -Recurse -Force ${env:OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
+                
+                powershell 'Restart-WebAppPool -Name "YourAppPoolName"'
             }
         }
 
