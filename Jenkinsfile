@@ -29,12 +29,18 @@ pipeline {
                 script {
                     // Jenkins parameters are available to PowerShell as an environment variable.
                     powershell '''
-                    Write-Host "NuGet Repository URL: ${env:NUGET_SOURCE}"
+                    Write-Host "Code Repository URL: ${env:CODE_REPOSITORY}"
                     Write-Host "Main Branch: ${env:MAIN_BRANCH}"
-                    Write-Host "Solution File: ${env:SOLUTION_FILE}"
-                    Write-Host "Configuration: ${env:CONFIGURATION}"
-                    Write-Host "Target Runtime: ${env:TARGET_RUNTIME}"
-                    Write-Host "Output Directory: ${env:OUTPUT_DIRECTORY}"
+                    Write-Host "Frontend Path: ${env:FRONTEND_PATH}"
+                    Write-Host "Frontend Configuration: ${env:FRONTEND_CONFIGURATION}"
+                    Write-Host "Frontend Base Href: ${env:FRONTEND_BASE_HREF}"
+                    Write-Host "Frontend Output Directory: ${env:FRONTEND_OUTPUT_DIRECTORY}"
+                    Write-Host "Backend Path: ${env:BACKEND_PATH}"
+                    Write-Host "Backend NuGet Repository URL: ${env:BACKEND_NUGET_SOURCE}"
+                    Write-Host "Backend Solution File: ${env:BACKEND_SOLUTION_FILE}"
+                    Write-Host "Backend Configuration: ${env:BACKEND_CONFIGURATION}"
+                    Write-Host "Backend Target Runtime: ${env:BACKEND_TARGET_RUNTIME}"
+                    Write-Host "Backend Output Directory: ${env:BACKEND_OUTPUT_DIRECTORY}"
                     Write-Host "Deploy Path: ${env:DEPLOY_PATH}"
                     Write-Host "Web App Pool: ${env:WEB_APP_POOL}"
                     '''
@@ -48,7 +54,7 @@ pipeline {
                     echo "Building ${env.MAIN_BRANCH} branch..."
 
                     checkout([$class: "GitSCM", branches: [[name: "*/${env.MAIN_BRANCH}"]],
-                              userRemoteConfigs: [[url: "${env:NUGET_SOURCE}"]]
+                              userRemoteConfigs: [[url: "${env:CODE_REPOSITORY}"]]
                     ])
 
                     powershell "ls" // Ensures that Jenkins pulled all the files.
@@ -56,41 +62,64 @@ pipeline {
             }
         }
 
+        /*stage("Build Frontend (Angular)") {
+            steps {
+                script {
+                    dir(FRONTEND_PATH) {
+                        echo "Installing dependencies..."
+                        powershell "npm install"
+
+                        echo "Building Angular frontend..."
+                        powershell "ng build --configuration ${env:FRONTEND_CONFIGURATION} --base-href=${env:FRONTEND_BASE_HREF}"
+                    }
+                }
+            }
+        }*/
+
         stage("Restore dependencies") {
             steps {
                 script {
-                    echo "Restoring dependencies for ${env.SOLUTION_FILE}..."
+                    echo "Restoring dependencies for ${env.BACKEND_SOLUTION_FILE}..."
 
                     // Pulls packages from the "NuGet.Config" file sources.
-                    powershell "dotnet restore ${env:SOLUTION_FILE}" // --source ${env:NUGET_SOURCE}
+                    powershell "dotnet restore ${env:BACKEND_SOLUTION_FILE}" // --source ${env:NUGET_SOURCE}
                 }
             }
         }
 
         stage("Build solution file") {
             steps {
-                echo "Building ${env.SOLUTION_FILE}..."
+                echo "Building ${env.BACKEND_SOLUTION_FILE}..."
 
                 // Builds all the projects contained in the provided solution file.
-                powershell "dotnet build ${env:SOLUTION_FILE}"
+                powershell "dotnet build ${env:BACKEND_SOLUTION_FILE}"
             }
         }
 
         stage("Prepare for deployment (a.k.a publish)") {
             steps {
-                echo "Publishing ${env.SOLUTION_FILE}..."
+                echo "Publishing ${env.BACKEND_SOLUTION_FILE}..."
 
                 // Compiles the application and prepare it for deployment.
-                powershell "dotnet publish ${env:SOLUTION_FILE} -c ${env:CONFIGURATION} -r ${env:TARGET_RUNTIME} -o ${env:OUTPUT_DIRECTORY} --self-contained true"
+                powershell "dotnet publish ${env:BACKEND_SOLUTION_FILE} -c ${env:BACKEND_CONFIGURATION} -r ${env:BACKEND_TARGET_RUNTIME} -o ${env:BACKEND_OUTPUT_DIRECTORY} --self-contained true"
             }
         }
 
         stage("Deployment to IIS web server") {
             steps {
-                echo "Copying application files from ${env.OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}..."
+                echo '''
+                Deploying backend...
+                Copying application files from ${env.BACKEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}...
+                '''
 
-                // Currently, there is no a compressed file to deploy, so the files are copied to the deployment path.
-                powershell "Copy-Item -Recurse -Force ${env:OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
+                powershell "Copy-Item -Recurse -Force ${env:BACKEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
+
+                /*echo '''
+                Deploying frontend...
+                Copying application files from ${env.FRONTEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}...
+                '''*/
+
+                //powershell "Copy-Item -Recurse -Force ${env:FRONTEND_PATH}\\${env:FRONTEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
             }
         }
 
