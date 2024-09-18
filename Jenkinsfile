@@ -108,12 +108,12 @@ pipeline {
         stage("Deployment to IIS web server") {
             steps {
                 echo "Deploying backend..."
-                echo "Copying application files from ${env.BACKEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}..."
+                echo "Copying application files from ${env.BACKEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}"
 
                 powershell "Copy-Item -Recurse -Force ${env:BACKEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
 
                 /*echo "Deploying frontend..."
-                echo "Copying application files from ${env.FRONTEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}...""*/
+                echo "Copying application files from ${env.FRONTEND_OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}"*/
 
                 //powershell "Copy-Item -Recurse -Force ${env:FRONTEND_PATH}\\${env:FRONTEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
             }
