@@ -89,7 +89,7 @@ pipeline {
             steps {
                 powershell "Copy-Item -Recurse -Force ${env:OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
                 
-                powershell 'Restart-WebAppPool -Name "YourAppPoolName"'
+                powershell 'Restart-WebAppPool -Name "${env:WEB_APP_POOL}"'
             }
         }
 
