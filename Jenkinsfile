@@ -87,61 +87,21 @@ pipeline {
 
         stage("Deployment to IIS web server") {
             steps {
+                echo "Copying application files from ${env.OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}..."
+
                 powershell "Copy-Item -Recurse -Force ${env:OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
-                
-                powershell 'Restart-WebAppPool -Name "${env:WEB_APP_POOL}"'
             }
         }
 
-        /*stage("Deployment package creation") {
+        stage("Recycle web app pool") {
             steps {
-                    script {
-                        deploymentPackageCreation()
-                    }
-            }
-        }*/
+                echo "Recycling ${env:WEB_APP_POOL} web app pool..."
 
-        /*stage("Verify ZIP file creation") {
-            steps {
-                powershell '''
-                if (Test-Path "$env:WORKSPACE\\$env:PACKAGE_NAME") {
-                    Write-Host "ZIP file created successfully: $env:PACKAGE_NAME"
-                    ls
-                } else {
-                    Write-Error "ZIP file was not created"
-                }
-                '''
+                powershell 'Restart-WebAppPool -Name "${env:WEB_APP_POOL}"'
             }
-        }*/
-
-        /*stage("ZIP file contents verification") {
-            steps {
-                echo "Verifying contents of the ZIP file..."
-                powershell '''
-                Add-Type -AssemblyName System.IO.Compression.FileSystem
-                $zipFile = [System.IO.Compression.ZipFile]::OpenRead("$env:WORKSPACE\\$env:PACKAGE_NAME")
-                $zipFile.Entries | ForEach-Object { $_.FullName }
-                $zipFile.Dispose()
-                '''
-            }
-        }*/
-
-        /*stage("Deployment to IIS web server") {
-            steps {
-                script {
-                    deploymentToIIS()
-                }
-            }
-        }*/
-
-        /*stage("Recycling web app pool") {
-            steps {
-                script {
-                    recycleWebAppPool()
-                }
-            }
-        }*/
+        }
     }
+    
     post {
         always {
             cleanWs()
