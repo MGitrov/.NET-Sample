@@ -89,6 +89,7 @@ pipeline {
             steps {
                 echo "Copying application files from ${env.OUTPUT_DIRECTORY} to ${env.DEPLOY_PATH}..."
 
+                // Currently, there is no a compressed file to deploy, so the files are copied to the deployment path.
                 powershell "Copy-Item -Recurse -Force ${env:OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
             }
         }
@@ -97,11 +98,11 @@ pipeline {
             steps {
                 echo "Recycling ${env:WEB_APP_POOL} web app pool..."
 
-                powershell 'Restart-WebAppPool -Name "${env:WEB_APP_POOL}"'
+                powershell "Restart-WebAppPool -Name '${env:WEB_APP_POOL}'"
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
