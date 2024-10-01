@@ -31,18 +31,18 @@ pipeline {
                     powershell '''
                     Write-Host "Code Repository URL: ${env:CODE_REPOSITORY}"
                     Write-Host "Main Branch: ${env:MAIN_BRANCH}"
-                    Write-Host "Frontend Path: ${env:FRONTEND_PATH}"
                     Write-Host "Frontend Configuration: ${env:FRONTEND_CONFIGURATION}"
                     Write-Host "Frontend Base Href: ${env:FRONTEND_BASE_HREF}"
                     Write-Host "Frontend Output Directory: ${env:FRONTEND_OUTPUT_DIRECTORY}"
-                    Write-Host "Backend Path: ${env:BACKEND_PATH}"
                     Write-Host "Backend NuGet Repository URL: ${env:BACKEND_NUGET_SOURCE}"
                     Write-Host "Backend Solution File: ${env:BACKEND_SOLUTION_FILE}"
                     Write-Host "Backend Configuration: ${env:BACKEND_CONFIGURATION}"
                     Write-Host "Backend Target Runtime: ${env:BACKEND_TARGET_RUNTIME}"
                     Write-Host "Backend Output Directory: ${env:BACKEND_OUTPUT_DIRECTORY}"
-                    Write-Host "Deploy Path: ${env:DEPLOY_PATH}"
-                    Write-Host "Web App Pool: ${env:WEB_APP_POOL}"
+                    Write-Host "Frontend Deploy Path: ${env:FRONTEND_DEPLOY_PATH}"
+                    Write-Host "Backend Deploy Path: ${env:BACKEND_DEPLOY_PATH}"
+                    Write-Host "Frontend Web App Pool: ${env:FRONTEND_WEB_APP_POOL}"
+                    Write-Host "Backend Web App Pool: ${env:BACKEND_WEB_APP_POOL}"
                     '''
                 }
             }
@@ -108,22 +108,33 @@ pipeline {
         stage("Deployment to IIS web server") {
             steps {
                 echo "Deploying backend..."
-                echo "Copying application files from '${env.BACKEND_OUTPUT_DIRECTORY}' to '${env.DEPLOY_PATH}'"
+                echo "Copying application files from '${env.BACKEND_OUTPUT_DIRECTORY}' to '${env.BACKEND_DEPLOY_PATH}'"
 
-                powershell "Copy-Item -Recurse -Force ${env:BACKEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
+                powershell "Copy-Item -Recurse -Force ${env:BACKEND_OUTPUT_DIRECTORY}\\* '${env:BACKEND_DEPLOY_PATH}'"
 
                 /*echo "Deploying frontend..."
-                echo "Copying application files from '${env.FRONTEND_OUTPUT_DIRECTORY}' to '${env.DEPLOY_PATH}'"*/
+                echo "Copying application files from '${env.FRONTEND_OUTPUT_DIRECTORY}' to '${env.FRONTEND_DEPLOY_PATH}'"*/
 
-                //powershell "Copy-Item -Recurse -Force ${env:FRONTEND_PATH}\\${env:FRONTEND_OUTPUT_DIRECTORY}\\* '${env:DEPLOY_PATH}'"
+                //powershell "Copy-Item -Recurse -Force ${env:FRONTEND_PATH}\\${env:FRONTEND_OUTPUT_DIRECTORY}\\* '${env:FRONTEND_ DEPLOY_PATH}'"
             }
         }
 
         stage("Recycle web app pool") {
             steps {
-                echo "Recycling ${env:WEB_APP_POOL} web app pool..."
+                echo "Recycling ${env:BACKEND_WEB_APP_POOL} web app pool..."
 
-                powershell "Restart-WebAppPool -Name '${env:WEB_APP_POOL}'"
+                powershell "Restart-WebAppPool -Name '${env:BACKEND_WEB_APP_POOL}'"
+
+                // If the backend and frontend should be on separate application pools.
+                /*
+                echo "Recycling ${env:BACKEND_WEB_APP_POOL} web app pool (backend)..."
+
+                powershell "Restart-WebAppPool -Name '${env:BACKEND_WEB_APP_POOL}'"
+
+                echo "Recycling ${env:FRONTEND_WEB_APP_POOL} web app pool (frontend)..."
+
+                powershell "Restart-WebAppPool -Name '${env:FRONTEND_WEB_APP_POOL}'"
+                */
             }
         }
     }
